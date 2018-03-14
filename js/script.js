@@ -2,32 +2,41 @@
 $(function() {
 
     function checkUser(e, elements, users) {
-        if(e.key === '@'){
-            elements.searchUser = true;
-            return;
-        }else if(e.keyCode === 32){
-            elements.searchUser = false;
-            return;
-        }
-        if(elements.searchUser === true){
+        setTimeout(function () {
             let cursorPosition = elements.textArea.prop("selectionStart");
-            setTimeout(function () {
+            if(cursorPosition){
                 let value = elements.textArea.val();
-                let startPos = getStartPosition(value, cursorPosition);
-                let text = value.substring(startPos, cursorPosition + 1);
-                }, 0)
-        }
+                let startPos = getStartPosition(value, cursorPosition-1);
+                if(startPos){
+                    let text = value.substring(startPos, cursorPosition);
+                      return  find(text, users, elements);
+                }
+                return elements.showUsers.empty();
+                }
+        }, 0);
+
     }
 
     function getStartPosition(str, pos) {
         if (!str.substring(pos, pos + 1).match(/[A-Za-z]/)) {
-            return pos + 1;
+            return str.substring(pos, pos + 1) === '@' ? pos + 1: null;
         } else if (pos === 0) {
-            return 0;
+            return 0
         } else {
             return getStartPosition(str, pos - 1);
         }
     }
+
+    function find(user, users, elements) {
+        elements.showUsers.empty();
+        user = user.toLowerCase();
+        for (let i = 0; i < users.length; i++) {
+            if (users[i]['name'].toLowerCase().indexOf(user) >= 0) {
+                elements.showUsers.append('<div>' + users[i]['name'] + '</div>');
+            }
+        }
+    }
+
 
     function initDialog() {
         let users = [
@@ -51,10 +60,7 @@ $(function() {
         };
 
         if(elements.textArea){
-            elements.textArea.on('keydown paste', e => checkUser(e, elements, users));
-        }
-        for (let i = 0; i < users.length; i++) {
-            elements.showUsers.append('<div>' + users[i]['name'] + '</div>');
+            elements.textArea.on('keydown paste click', e => checkUser(e, elements, users));
         }
     }
 
