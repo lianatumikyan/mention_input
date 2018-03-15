@@ -24,7 +24,7 @@ body {
 .autocomplete .close.visible {
     display: block;
 }
-#mention_user {
+.mention_user {
     padding: 10px 10px;
     font-weight: 300;
     width: 100%;
@@ -49,6 +49,6 @@ body {
     cursor: pointer;
     transition: all 0.2s;
 }
-.users div:hover {
+.users div:hover, .users div:focus {
     background: #f2f2f2;
 }
