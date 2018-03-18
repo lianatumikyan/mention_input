@@ -3,52 +3,67 @@ $(function() {
 
     function checkUser(e, elements, users) {
         let active = elements.activeName;
-        if(e.keyCode === 40){
-            if(elements.isOpen && active >= 0 && active < 9){
-                elements.activeName = active + 1;
-                }else {
-                elements.activeName = 0;
+        let open = elements.isOpen;
+        switch (e.keyCode){
+            case 40:
+                e.preventDefault();
+                elements.activeName = open && active!== null && active >= 0 && active < 9? active + 1 : 0;
+                makeElemActive(active, elements.activeName);
+                break;
+            case 38:
+                e.preventDefault();
+                elements.activeName = open && active!== null && active > 0 && active <= 9? active - 1 : 9;
+                makeElemActive(active, elements.activeName);
+                break;
+            case 13:
+                if(elements.isOpen && elements.hasOwnProperty('activeName')){
+                    e.preventDefault();
+                    let text = $('.selectUser:eq(' + elements.activeName + ')').text();
+                    fillName(null, elements, text, users);
                 }
-            return makeElemActive(active, elements.activeName)
-            }
-            if(e.keyCode === 38) {
-                if (elements.isOpen && active > 0 && active <= 9) {
-                    elements.activeName = active - 1;
-                    } else {
-                    elements.activeName = 9;
-                    }
-                return makeElemActive(active, elements.activeName);
-            }
-            if (e.keyCode === 13 && elements.isOpen && elements.activeName){
-            e.preventDefault();
-            let text = $('.selectUser:eq(' + elements.activeName + ')').text();
-                return fillName(null, elements, text);
-            }
+                break;
+            default:
+                setTimeout(() => findText(elements, users), 0);
+                }
+    }
 
-        setTimeout(function () {
-            elements.cursorPosition = elements.textArea.prop("selectionStart");
-            if(elements.cursorPosition){
-                let value = elements.textArea.val();
-                elements.startPos = getStartPosition(value, elements.cursorPosition-1);
-                elements.isOpen = false;
-                if(elements.startPos){
-                    let text = value.substring(elements.startPos, elements.cursorPosition);
-                      return  find(text, users, elements);
-                }
-                return elements.showUsers.empty();
-                }
-        }, 0);
-
+    function emptyUsers(elements) {
+        elements.textArea.focus();
+        elements.activeName = null;
+        elements.showUsers.empty();
     }
 
     function makeElemActive(oldIndex, newIndex) {
-        $('.selectUser:eq(' + oldIndex + ')').blur();
-        $('.selectUser:eq(' + newIndex + ')').focus();
+        $('.selectUser:eq(' + oldIndex + ')').removeClass('active');
+        $('.selectUser:eq(' + newIndex + ')').addClass('active');
     }
+
+    function findText(elements, users) {
+        let position = elements.cursorPosition = elements.textArea.prop("selectionStart"),
+            value = elements.textArea.val(),
+            startPosition,
+            text = '';
+        if(position){
+            elements.isOpen = false;
+            startPosition = elements.startPos = getStartPosition(value, position-1);
+            if(startPosition){
+                elements.match = true;
+                text = value.substring(startPosition, position);
+                return  find(text, users, elements);
+            }else if(elements.match){
+                startPosition = elements.startPos = getStartPosition(value, position-2);
+                text = value.substring(startPosition, position-1);
+                fillName(null, elements, text, users);
+                elements.match = false;
+            }
+            return emptyUsers(elements);
+        }
+    }
+
     function getStartPosition(str, pos) {
-        if (str.substring(pos, pos + 1) === '@') {
-            return pos + 1;
-        } else if (pos === 0) {
+        if (!str.substring(pos, pos + 1).match(/[A-Za-z]/)) {
+            return str.substring(pos, pos + 1) === '@'?  pos + 1 : null;
+            } else if (pos === 0) {
             return 0
         }
             return getStartPosition(str, pos - 1);
@@ -75,77 +90,109 @@ $(function() {
         }
     }
 
-    function fillName(e, elements, targetText){
+    function fillName(e, elements, targetText, users){
         let text = targetText? targetText : $(e.target).text(),
             textarea = elements.textArea,
-            value = textarea.val();
-        elements.cursorPosition = getEndPosition(value, elements.cursorPosition);
-        value = value.substring(0, elements.startPos) + text + value.substring(elements.cursorPosition) + ' ';
+            value = textarea.val(),
+            position = elements.cursorPosition,
+        startPos = elements.startPos;
+        elements.cursorPosition = getEndPosition(value, position);
+        value = value.substring(0, startPos) + text + value.substring(position) + ' ';
         textarea.val(value);
-        elements.showUsers.empty();
-        elements.textArea.focus();
+        let userID = users.find(user => (user.name).toLowerCase() === text.toLowerCase());
+        if(userID){
+            userID = userID.id;
+            if(elements.mentionUsers.indexOf(userID) < 0){
+                elements.mentionUsers.push(userID);
+            }
+        }else{
+            for(let i = 0; i < elements.mentionUsers; i++){
+                let username = users[i];
+                if(value.indexOf('@'+username.name) < 0){
+                    let index = elements.mentionUsers.indexOf(username.id);
+                    if(index >= 0){
+                        elements.mentionUsers.splice(index, 1);
+                    }
+                }
+            }
+        }
+        return emptyUsers(elements);
     }
 
 
     function initDialog() {
         let users = [
-            {
-                name: 'John',
-                image: 'path'
-            },
-            {
-                name: 'Annie',
-                image: 'path'
-            },
-            {
-                name: 'Jessica',
-                image: 'path'
-            },
-            {
-                name: 'Jessica',
-                image: 'path'
-            },
-            {
-                name: 'Jessica',
-                image: 'path'
-            },
-            {
-                name: 'Jessica',
-                image: 'path'
-            },
-            {
-                name: 'Jessica',
-                image: 'path'
-            },
-            {
-                name: 'Jessica',
-                image: 'path'
-            },
-            {
-                name: 'Jessica',
-                image: 'path'
-            },
-            {
-                name: 'Jessica',
-                image: 'path'
-            },
-            {
-                name: 'Jessica',
-                image: 'path'
-            },
-            {
-                name: 'Jessica',
-                image: 'path'
-            },
-            {
-                name: 'Jessica',
-                image: 'path'
-            }
-        ],
+                {
+                    name: 'Jewel',
+                    image: 'path',
+                    id: '1'
+                },
+                {
+                    name: 'Ren',
+                    image: 'path',
+                    id: '2'
+                },
+                {
+                    name: 'Sonny',
+                    image: 'path',
+                    id: '3'
+                },
+                {
+                    name: 'Lillian',
+                    image: 'path',
+                    id: '4'
+                },
+                {
+                    name: 'Alinta',
+                    image: 'path',
+                    id: '5'
+                },
+                {
+                    name: 'Athalie',
+                    image: 'path',
+                    id: '6'
+                },
+                {
+                    name: 'Ederne',
+                    image: 'path',
+                    id: '7'
+                },
+                {
+                    name: 'Eduardo',
+                    image: 'path',
+                    id: '8'
+                },
+                {
+                    name: 'Jessica',
+                    image: 'path',
+                    id: '9'
+                },
+                {
+                    name: 'Medea',
+                    image: 'path',
+                    id: '10'
+                },
+                {
+                    name: 'Svetlana',
+                    image: 'path',
+                    id: '11'
+                },
+                {
+                    name: 'Erick',
+                    image: 'path',
+                    id: '12'
+                },
+                {
+                    name: 'Laura',
+                    image: 'path',
+                    id: '13'
+                }
+            ],
         elements = {
             searchUser: false,
             textArea: $('.mention_user'),
-            showUsers: $('.users')
+            showUsers: $('.users'),
+            mentionUsers: []
         };
 
         if(elements.textArea){
@@ -153,7 +200,7 @@ $(function() {
         }
 
         if(elements.showUsers){
-            elements.showUsers.on('click', '.selectUser', e => fillName(e, elements));
+            elements.showUsers.on('click', '.selectUser', e => fillName(e, elements, null, users));
         }
     }
 

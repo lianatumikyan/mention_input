@@ -49,6 +49,6 @@ body {
     cursor: pointer;
     transition: all 0.2s;
 }
-.users div:hover, .users div:focus {
+.users div:hover, .active {
     background: #f2f2f2;
 }
